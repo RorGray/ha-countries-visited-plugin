@@ -223,8 +223,15 @@ class CountriesMapCard extends HTMLElement {
     };
   }
 
-  // Don't define getCardSize() - let the layout system control sizing
-  // The layout tab in Home Assistant will handle grid sizing
+  static getGridOptions() {
+    return {
+      columns: 12,
+      rows: 5,
+      min_columns: 9,
+      min_rows: 5,
+      max_rows: 12
+    };
+  }
 
   _shouldUpdate() {
     if (!this._config || !this._hass) return false;

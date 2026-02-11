@@ -30,6 +30,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Card visual editor with native Home Assistant components
   - Color pickers for all color options
   - Transparent ocean color option with toggle
+- 📐 **Grid Sizing Support**: Card sizing options for Home Assistant sections view
+  - Default size: 12 columns × 5 rows (full width)
+  - Minimum size: 9 columns × 5 rows
+  - Maximum size: 12 columns × 10 rows
+  - Resizable via dashboard editor's Layout tab
 
 ### Changed
 - ✨ Improved card editor UX with native Home Assistant components
