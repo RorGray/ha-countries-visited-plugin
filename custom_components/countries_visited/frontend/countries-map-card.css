@@ -7,7 +7,7 @@ countries-map-card {
 }
 
 /* When grid variables are not set, use auto sizing */
-countries-map-card:not([style*="--row-size"]):not([style*="--column-size"]) {
+.card:not([style*="--row-size"]):not([style*="--column-size"]) countries-map-card {
   height: auto;
   width: auto;
 }
