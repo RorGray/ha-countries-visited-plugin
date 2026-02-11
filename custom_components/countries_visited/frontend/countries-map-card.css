@@ -15,13 +15,15 @@ countries-map-card {
   width: 100%;
 }
 
-hui-panel-view countries-map-card {
-  height: 100%;
-  width: 100%;
+/* Panel view mode: card fills the entire view */
+countries-map-card.panel-mode {
+  height: 100% !important;
+  width: 100% !important;
 }
 
-hui-panel-view countries-map-card .countries-card {
+countries-map-card.panel-mode .countries-card {
   border-radius: 0;
+  box-shadow: none;
 }
 
 countries-map-card .countries-card {

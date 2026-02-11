@@ -164,6 +164,10 @@ class CountriesMapCard extends HTMLElement {
     // Track if we've done initial centering (to avoid re-centering on re-renders)
     this._initialCenterDone = false;
     
+    // Track card dimensions to detect size changes
+    this._lastCardWidth = 0;
+    this._lastCardHeight = 0;
+    
     // Country info for tooltips
     this._countryInfo = {};
     
@@ -173,12 +177,19 @@ class CountriesMapCard extends HTMLElement {
     this._documentListenersAdded = false;
   }
 
+  connectedCallback() {
+    // Detect panel mode when card is added to DOM
+    this._detectPanelMode();
+  }
+
   set hass(hass) {
     this._hass = hass;
     // Only render if relevant data has changed
     if (this._shouldUpdate()) {
       this.render();
     }
+    // Detect panel mode
+    this._detectPanelMode();
   }
 
   setConfig(config) {
@@ -221,6 +232,30 @@ class CountriesMapCard extends HTMLElement {
 
   // Don't define getCardSize() - let the layout system control sizing
   // The layout tab in Home Assistant will handle grid sizing
+
+  _detectPanelMode() {
+    // Check if card is inside a panel view (hui-panel-view)
+    // Panel views are typically detected by checking parent elements
+    let element = this.parentElement;
+    let isPanelMode = false;
+    
+    // Walk up the DOM tree to find hui-panel-view
+    while (element && !isPanelMode) {
+      if (element.tagName === 'HUI-PANEL-VIEW' || 
+          element.classList?.contains('panel-view')) {
+        isPanelMode = true;
+        break;
+      }
+      element = element.parentElement;
+    }
+    
+    // Apply or remove panel-mode class
+    if (isPanelMode) {
+      this.classList.add('panel-mode');
+    } else {
+      this.classList.remove('panel-mode');
+    }
+  }
 
   _shouldUpdate() {
     if (!this._config || !this._hass) return false;
@@ -560,10 +595,55 @@ class CountriesMapCard extends HTMLElement {
 
   // ==================== Pan & Zoom Methods ====================
 
+  _getActualSvgDimensions(containerRect) {
+    // Calculate actual SVG rendered size considering object-fit: contain
+    const svgAspect = this._viewBoxWidth / this._viewBoxHeight;
+    const containerAspect = containerRect.width / containerRect.height;
+    
+    let actualWidth, actualHeight, offsetX = 0, offsetY = 0;
+    
+    if (containerAspect > svgAspect) {
+      // Container is wider - SVG height fills, width is letterboxed
+      actualHeight = containerRect.height;
+      actualWidth = actualHeight * svgAspect;
+      offsetX = (containerRect.width - actualWidth) / 2;
+    } else {
+      // Container is taller - SVG width fills, height is letterboxed
+      actualWidth = containerRect.width;
+      actualHeight = actualWidth / svgAspect;
+      offsetY = (containerRect.height - actualHeight) / 2;
+    }
+    
+    return { width: actualWidth, height: actualHeight, offsetX, offsetY };
+  }
+
   _setupPanZoom() {
     const container = this.querySelector('#map-container');
     const svg = container?.querySelector('svg');
     if (!container || !svg) return;
+
+    // Remove old event handlers if elements changed
+    if (this._mapContainer && this._mapContainer !== container) {
+      if (this._mapContainer._wheelHandler) {
+        this._mapContainer.removeEventListener('wheel', this._mapContainer._wheelHandler);
+        this._mapContainer._wheelHandler = null;
+      }
+      if (this._mapContainer._touchstartHandler) {
+        this._mapContainer.removeEventListener('touchstart', this._mapContainer._touchstartHandler);
+        this._mapContainer.removeEventListener('touchmove', this._mapContainer._touchmoveHandler);
+        this._mapContainer.removeEventListener('touchend', this._mapContainer._touchendHandler);
+        this._mapContainer._touchstartHandler = null;
+        this._mapContainer._touchmoveHandler = null;
+        this._mapContainer._touchendHandler = null;
+      }
+    }
+    
+    if (this._mapSvg && this._mapSvg !== svg) {
+      if (this._mapSvg._mousedownHandler) {
+        this._mapSvg.removeEventListener('mousedown', this._mapSvg._mousedownHandler);
+        this._mapSvg._mousedownHandler = null;
+      }
+    }
 
     // Store reference for event handlers
     this._mapContainer = container;
@@ -606,6 +686,28 @@ class CountriesMapCard extends HTMLElement {
 
     // Center on current country if available, otherwise show full map
     const currentCountryEl = svg.querySelector('.country.current');
+    
+    // Check if card size changed - if so, reset initial center
+    const mapContainer = this.querySelector('#map-container');
+    if (mapContainer) {
+      const currentWidth = mapContainer.offsetWidth;
+      const currentHeight = mapContainer.offsetHeight;
+      
+      if (this._lastCardWidth > 0 && this._lastCardHeight > 0) {
+        // Card has been sized before - check if dimensions changed significantly
+        const widthChanged = Math.abs(currentWidth - this._lastCardWidth) > 10;
+        const heightChanged = Math.abs(currentHeight - this._lastCardHeight) > 10;
+        
+        if (widthChanged || heightChanged) {
+          // Size changed - reset initial center to re-center the map
+          this._initialCenterDone = false;
+        }
+      }
+      
+      this._lastCardWidth = currentWidth;
+      this._lastCardHeight = currentHeight;
+    }
+    
     if (currentCountryEl && !this._initialCenterDone) {
       this._centerOnCountry(currentCountryEl);
       this._initialCenterDone = true;
@@ -684,11 +786,14 @@ class CountriesMapCard extends HTMLElement {
     if (!this._isPanning) return;
     
     const container = this._mapContainer;
-    if (!container) return;
+    const svg = this._mapSvg;
+    if (!container || !svg) return;
 
     const rect = container.getBoundingClientRect();
-    const dx = (e.clientX - this._startMouseX) / rect.width * this._viewBoxWidth / this._zoom;
-    const dy = (e.clientY - this._startMouseY) / rect.height * this._viewBoxHeight / this._zoom;
+    const actualSvg = this._getActualSvgDimensions(rect);
+    
+    const dx = (e.clientX - this._startMouseX) / actualSvg.width * this._viewBoxWidth / this._zoom;
+    const dy = (e.clientY - this._startMouseY) / actualSvg.height * this._viewBoxHeight / this._zoom;
 
     this._panX = this._startPanX - dx;
     this._panY = this._startPanY - dy;
@@ -742,8 +847,10 @@ class CountriesMapCard extends HTMLElement {
       // Single touch pan
       e.preventDefault();
       const rect = container.getBoundingClientRect();
-      const dx = (e.touches[0].clientX - this._startMouseX) / rect.width * this._viewBoxWidth / this._zoom;
-      const dy = (e.touches[0].clientY - this._startMouseY) / rect.height * this._viewBoxHeight / this._zoom;
+      const actualSvg = this._getActualSvgDimensions(rect);
+      
+      const dx = (e.touches[0].clientX - this._startMouseX) / actualSvg.width * this._viewBoxWidth / this._zoom;
+      const dy = (e.touches[0].clientY - this._startMouseY) / actualSvg.height * this._viewBoxHeight / this._zoom;
 
       this._panX = this._startPanX - dx;
       this._panY = this._startPanY - dy;
@@ -793,16 +900,22 @@ class CountriesMapCard extends HTMLElement {
   }
 
   _zoomToPoint(pointX, pointY, newZoom, containerRect) {
+    const actualSvg = this._getActualSvgDimensions(containerRect);
+    
+    // Adjust point coordinates to account for letterboxing
+    const adjustedPointX = pointX - actualSvg.offsetX;
+    const adjustedPointY = pointY - actualSvg.offsetY;
+    
     // Convert screen point to viewBox coordinates before zoom
-    const viewBoxX = this._panX + (pointX / containerRect.width) * (this._viewBoxWidth / this._zoom);
-    const viewBoxY = this._panY + (pointY / containerRect.height) * (this._viewBoxHeight / this._zoom);
+    const viewBoxX = this._panX + (adjustedPointX / actualSvg.width) * (this._viewBoxWidth / this._zoom);
+    const viewBoxY = this._panY + (adjustedPointY / actualSvg.height) * (this._viewBoxHeight / this._zoom);
 
     // Update zoom
     this._zoom = newZoom;
 
     // Adjust pan to keep the point under cursor
-    this._panX = viewBoxX - (pointX / containerRect.width) * (this._viewBoxWidth / this._zoom);
-    this._panY = viewBoxY - (pointY / containerRect.height) * (this._viewBoxHeight / this._zoom);
+    this._panX = viewBoxX - (adjustedPointX / actualSvg.width) * (this._viewBoxWidth / this._zoom);
+    this._panY = viewBoxY - (adjustedPointY / actualSvg.height) * (this._viewBoxHeight / this._zoom);
 
     this._constrainPan();
     this._updateViewBox();
