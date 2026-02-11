@@ -1,17 +1,21 @@
 /* Scope all styles to the custom element for higher specificity */
 countries-map-card {
+  z-index: 0;
+  border: medium;
   display: block;
-  height: 100%;
+  position: absolute;
+  top: 0px;
+  left: 0px;
   width: 100%;
-}
-
-.card countries-map-card {
-  border-radius: 16px;
+  height: 100%;
+  background: inherit;
+  overflow: hidden;
 }
 
 countries-map-card .countries-card {
   background: var(--card-background-color, #fff);
   padding: 20px;
+  border-radius: var(--ha-card-border-radius,var(--ha-border-radius-lg));
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   font-family: var(--primary-font-family, system-ui);
   height: 100%;
