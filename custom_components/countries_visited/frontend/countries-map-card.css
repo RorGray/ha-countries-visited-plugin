@@ -1,10 +1,33 @@
 /* Scope all styles to the custom element for higher specificity */
+countries-map-card {
+  display: block;
+  /* Support for Home Assistant grid layout */
+  height: calc(var(--row-size, 0) * var(--row-height, 100px));
+  width: calc(var(--column-size, 0) * var(--column-gap, 8px));
+}
+
+/* When grid variables are not set, use auto sizing */
+countries-map-card:not([style*="--row-size"]):not([style*="--column-size"]) {
+  height: auto;
+  width: auto;
+}
+
+/* When inside a fit-rows card container, use 100% width */
+.card.fit-rows countries-map-card {
+  width: 100%;
+}
+
 countries-map-card .countries-card {
   background: var(--card-background-color, #fff);
   border-radius: 16px;
   padding: 20px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   font-family: var(--primary-font-family, system-ui);
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
 
 countries-map-card .card-header {
@@ -54,6 +77,9 @@ countries-map-card .current-badge:not(.visible) {
 countries-map-card .map-container {
   position: relative;
   width: 100%;
+  flex: 1; /* Fill available space in the flex container */
+  min-height: 0; /* Allow flex item to shrink below content size */
+  display: flex; /* Make container flex to properly size SVG */
   border-radius: 12px;
   overflow: hidden;
   touch-action: none; /* Prevent default touch actions for custom gestures */
@@ -62,11 +88,12 @@ countries-map-card .map-container {
 
 countries-map-card .map-container svg {
   width: 100%;
-  height: auto;
+  height: 100%;
   display: block;
   cursor: grab;
   user-select: none;
   -webkit-user-select: none;
+  object-fit: contain; /* Maintain aspect ratio while fitting */
 }
 
 countries-map-card .map-container svg.grabbing {
@@ -145,9 +172,7 @@ countries-map-card .country {
   cursor: pointer;
 }
 
-countries-map-card .country.visited {
-  /* fill set dynamically */
-}
+/* .country.visited fill is set dynamically via JavaScript */
 
 countries-map-card .country.current {
   /* fill and stroke set dynamically */
