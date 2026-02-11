@@ -15,6 +15,15 @@ countries-map-card {
   width: 100%;
 }
 
+hui-panel-view countries-map-card {
+  height: 100%;
+  width: 100%;
+}
+
+hui-panel-view countries-map-card .countries-card {
+  border-radius: 0;
+}
+
 countries-map-card .countries-card {
   background: var(--card-background-color, #fff);
   border-radius: 16px;
