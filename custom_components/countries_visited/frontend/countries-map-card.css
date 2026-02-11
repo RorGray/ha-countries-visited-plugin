@@ -1,15 +1,13 @@
 /* Scope all styles to the custom element for higher specificity */
 countries-map-card {
   display: block;
-  /* Support for Home Assistant grid layout */
-  height: calc(var(--row-size, 0) * var(--row-height, 100px));
-  width: calc(var(--column-size, 0) * var(--column-gap, 8px));
 }
 
-/* When grid variables are not set, use auto sizing */
-.card:not([style*="--row-size"]):not([style*="--column-size"]) countries-map-card {
-  height: auto;
-  width: auto;
+/* When inside a card container with grid variables, calculate size from parent */
+.card[style*="--row-size"] countries-map-card,
+.card[style*="--column-size"] countries-map-card {
+  height: calc(var(--row-size, auto) * var(--row-height, 100px));
+  width: calc(var(--column-size, auto) * var(--column-gap, 8px));
 }
 
 /* When inside a fit-rows card container, use 100% width */
