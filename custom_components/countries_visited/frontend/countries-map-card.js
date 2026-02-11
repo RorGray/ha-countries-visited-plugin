@@ -177,19 +177,12 @@ class CountriesMapCard extends HTMLElement {
     this._documentListenersAdded = false;
   }
 
-  connectedCallback() {
-    // Detect panel mode when card is added to DOM
-    this._detectPanelMode();
-  }
-
   set hass(hass) {
     this._hass = hass;
     // Only render if relevant data has changed
     if (this._shouldUpdate()) {
       this.render();
     }
-    // Detect panel mode
-    this._detectPanelMode();
   }
 
   setConfig(config) {
@@ -232,30 +225,6 @@ class CountriesMapCard extends HTMLElement {
 
   // Don't define getCardSize() - let the layout system control sizing
   // The layout tab in Home Assistant will handle grid sizing
-
-  _detectPanelMode() {
-    // Check if card is inside a panel view (hui-panel-view)
-    // Panel views are typically detected by checking parent elements
-    let element = this.parentElement;
-    let isPanelMode = false;
-    
-    // Walk up the DOM tree to find hui-panel-view
-    while (element && !isPanelMode) {
-      if (element.tagName === 'HUI-PANEL-VIEW' || 
-          element.classList?.contains('panel-view')) {
-        isPanelMode = true;
-        break;
-      }
-      element = element.parentElement;
-    }
-    
-    // Apply or remove panel-mode class
-    if (isPanelMode) {
-      this.classList.add('panel-mode');
-    } else {
-      this.classList.remove('panel-mode');
-    }
-  }
 
   _shouldUpdate() {
     if (!this._config || !this._hass) return false;

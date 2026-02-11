@@ -30,9 +30,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Card visual editor with native Home Assistant components
   - Color pickers for all color options
   - Transparent ocean color option with toggle
-- 📐 **Panel View Support**: Card automatically detects and fills panel view mode
-  - Full screen display when used as a panel card
-  - Removes borders and padding for seamless panel integration
 
 ### Changed
 - ✨ Improved card editor UX with native Home Assistant components
@@ -40,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ⚡ Optimized map rendering performance
 - 📐 Enhanced card sizing to properly fill fixed grid layouts (supports `--column-size` and `--row-size` CSS variables)
 - 📐 Card now reads grid sizing variables from parent `.card` container for better Home Assistant integration
+- 📐 Card now fills 100% of parent container (works in panel view, sections, and all layout modes)
 
 ### Fixed
 - 📐 Card size now configurable through layout tab and properly fills fixed-size containers

@@ -1,34 +1,16 @@
 /* Scope all styles to the custom element for higher specificity */
 countries-map-card {
   display: block;
-}
-
-/* When inside a card container with grid variables, calculate size from parent */
-.card[style*="--row-size"] countries-map-card,
-.card[style*="--column-size"] countries-map-card {
-  height: calc(var(--row-size, auto) * var(--row-height, 100px));
-  width: calc(var(--column-size, auto) * var(--column-gap, 8px));
-}
-
-/* When inside a fit-rows card container, use 100% width */
-.card.fit-rows countries-map-card {
+  height: 100%;
   width: 100%;
 }
 
-/* Panel view mode: card fills the entire view */
-countries-map-card.panel-mode {
-  height: 100% !important;
-  width: 100% !important;
-}
-
-countries-map-card.panel-mode .countries-card {
-  border-radius: 0;
-  box-shadow: none;
+.card countries-map-card {
+  border-radius: 16px;
 }
 
 countries-map-card .countries-card {
   background: var(--card-background-color, #fff);
-  border-radius: 16px;
   padding: 20px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   font-family: var(--primary-font-family, system-ui);
