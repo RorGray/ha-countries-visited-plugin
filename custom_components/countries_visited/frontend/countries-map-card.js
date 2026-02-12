@@ -593,10 +593,30 @@ class CountriesMapCard extends HTMLElement {
     return { width: actualWidth, height: actualHeight, offsetX, offsetY };
   }
 
+  _adjustViewBoxToContainer() {
+    // Adjust viewBox dimensions to match container aspect ratio
+    // This prevents letterboxing and allows the card to fill 100% height
+    const container = this.querySelector('#map-container');
+    if (!container) return;
+    
+    const containerRect = container.getBoundingClientRect();
+    if (containerRect.width === 0 || containerRect.height === 0) return;
+    
+    const containerAspect = containerRect.width / containerRect.height;
+    const baseHeight = 666; // Keep original height as base
+    
+    // Calculate new width to match container aspect ratio
+    this._viewBoxWidth = baseHeight * containerAspect;
+    this._viewBoxHeight = baseHeight;
+  }
+
   _setupPanZoom() {
     const container = this.querySelector('#map-container');
     const svg = container?.querySelector('svg');
     if (!container || !svg) return;
+
+    // Adjust viewBox dimensions to match container aspect ratio
+    this._adjustViewBoxToContainer();
 
     // Remove old event handlers if elements changed
     if (this._mapContainer && this._mapContainer !== container) {

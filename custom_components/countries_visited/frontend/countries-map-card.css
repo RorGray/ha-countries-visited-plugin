@@ -84,7 +84,6 @@ countries-map-card .map-container svg {
   cursor: grab;
   user-select: none;
   -webkit-user-select: none;
-  object-fit: contain; /* Maintain aspect ratio while fitting */
 }
 
 countries-map-card .map-container svg.grabbing {
